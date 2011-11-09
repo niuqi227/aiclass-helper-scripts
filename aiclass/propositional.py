@@ -81,7 +81,7 @@ def CONST(regex, op):
 
 class Parser(SimpleParser):
     t_SYMBOL = r'[a-zA-Z_]\w*'
-    t_NOT = CONST(r'!', operator.__not__)
+    t_NOT = CONST(r'\~', operator.__not__)
     t_AND = CONST(r'\&', operator.__and__)
     t_OR = CONST(r'\|', operator.__or__)
     t_IMPLY = CONST(r'\=\>', lambda a,b: (not a) or b)

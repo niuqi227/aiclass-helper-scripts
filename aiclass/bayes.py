@@ -80,7 +80,7 @@ class Material(object):
         self.categories = [k for k,v in raw]
         self._p = {}
         self.phrases = sum( len(v) for k,v in raw )
-        self.vocabularies = set(itertools.chain(*[ itertools.chain(*v) for k,v in raw]))
+        self.vocabulary = set(itertools.chain(*[ itertools.chain(*v) for k,v in raw]))
         
         for category, phrases in raw:
             self._p[category] = len(phrases), self.phrases
@@ -90,8 +90,11 @@ class Material(object):
             for word in itertools.chain(*phrases):
                 count[word] += 1
 
-            for k in self.vocabularies:
+            for k in self.vocabulary:
                 self._p[(k,category)] = count.get(k, 0), total
+     
+    def size_of_vocabulary(self):
+        return len(self.vocabulary)
 
     def is_conditional(self, expression):
         return isinstance(expression, tuple)
@@ -107,7 +110,7 @@ class Material(object):
         if self.is_category(expression):
             return fractions.Fraction(n+laplace, d+laplace*len(self.categories))
         else:
-            return fractions.Fraction(n+laplace, d+laplace*len(self.vocabularies))
+            return fractions.Fraction(n+laplace, d+laplace*len(self.vocabulary))
         
     def P(self, expression, laplace):
         if self.is_category(expression):
@@ -117,9 +120,9 @@ class Material(object):
             if self.is_phrase(a) and self.is_category(b):
                 return reduce(lambda a,b: a*b, [ self.p((w,b), laplace) for w in a ])
             elif self.is_category(a) and self.is_phrase(b):
-                 return fractions.Fraction(
-                     self.P((b,a), laplace) * self.P(a, laplace),
-                     sum(self.P((b,k), laplace) * self.P(k, laplace) for k in self.categories) )
+                return fractions.Fraction(
+                    self.P((b,a), laplace) * self.P(a, laplace),
+                    sum(self.P((b,k), laplace) * self.P(k, laplace) for k in self.categories) )
 
         raise NotImplementedError
    
