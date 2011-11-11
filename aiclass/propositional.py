@@ -86,8 +86,7 @@ class Parser(SimpleParser):
     t_OR = CONST(r'\|', operator.__or__)
     t_IMPLY = CONST(r'\=\>', lambda a,b: (not a) or b)
     t_EQUAL = CONST(r'\<\=\>', operator.__eq__)
-    t_LPAREN = r'\('
-    t_RPAREN = r'\)'
+    literals = ['(', ')']
 
     precedence = [
         ('left', 'IMPLY', 'EQUAL'),
@@ -95,22 +94,22 @@ class Parser(SimpleParser):
         ('right', 'NOT')]
         
     def p_symbol(self, p):
-        '''expression : SYMBOL'''
+        """expression : SYMBOL"""
         p[0] = Symbol(p[1])
 
     def p_paren(self, p):
-        '''expression : LPAREN expression RPAREN'''
+        """expression : '(' expression ')' """
         p[0] = p[2]
 
     def p_unary_expression(self, p):
-        '''expression : NOT expression'''
+        """expression : NOT expression"""
         p[0] = UnOp(p[1], p[2])
         
     def p_binary_expression(self, p):
-        '''expression : expression AND expression
+        """expression : expression AND expression
                       | expression OR  expression
                       | expression IMPLY expression
-                      | expression EQUAL expression'''
+                      | expression EQUAL expression"""
         p[0] = BinOp(p[2], p[1], p[3])
 
 

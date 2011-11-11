@@ -3,71 +3,64 @@ import itertools, fractions, collections
 
 
 class MaterialParser(SimpleParser):
-    t_COLON = r'\:'
-    t_COMMA = r'\,'
-    t_DOT = r'\.'
     t_WORD = r'[A-Za-z]+'
     t_BLANK = r'\ +'
     t_ignore = '\n'
+    literals = [':', ',', '.']
 
     def p_material_top(self, p):
-        '''categories : categories category'''
-        p[0] = Material(p[1] + [p[2]])
+        """categories : categories categories"""
+        p[0] = Material(p[1] + p[2])
 
     def p_material_categories(self, p):
-        '''categories : category'''
-        p[0] = [p[1]]
+        """categories : WORD ':' phrases '.'"""
+        p[0] = [(p[1], p[3])]
     
-    def p_material_category(self, p):
-        '''category : WORD COLON phrases DOT'''
-        p[0] = p[1], p[3]
-
     def p_material_phrases(self, p):
-        '''phrases : phrases COMMA phrase'''
-        p[0] = p[1] + [p[3]]
+        """phrases : phrases ',' phrases"""
+        p[0] = p[1] + p[3]
 
     def p_material_phrase(self, p):
-        '''phrases : phrase'''
+        """phrases : phrase"""
         p[0] = [p[1]]
 
     def p_material_words(self, p):
-        '''phrase : phrase BLANK WORD'''
-        p[0] = p[1] + [p[3]]
+        """phrase : phrase BLANK phrase"""
+        p[0] = p[1] + p[3]
 
     def p_material_word(self, p):
-        '''phrase : WORD'''
+        """phrase : WORD"""
         p[0] = [p[1]]
 
 
 
 class ExpressionParser(SimpleParser):
-    t_QUOTE = r'\"'
     t_WORD = r'[A-Za-z]+'
     t_BLANK = r'\ +'
-    t_VERTICAL = r'\|'
+    literals = ['"', '|']
     
     def p_expression_probability(self, p):
-        '''expression : event'''
+        """expression : event"""
         p[0] = p[1]
     
     def p_expression_conditional(self, p):
-        '''expression : event VERTICAL event'''
+        """expression : event '|' event"""
         p[0] = p[1], p[3]
 
     def p_expression_events(self, p):
-        '''event : QUOTE phrase QUOTE'''
+        """event : '"' phrase '"'"""
         p[0] = p[2]
     
     def p_expression_event(self, p):
-        '''event : WORD'''
+        """event : WORD"""
         p[0] = p[1]
 
     def p_expression_words(self, p):
-        '''phrase : phrase BLANK WORD'''
-        p[0] = p[1] + [p[3]]
+        """phrase : phrase BLANK phrase"""
+        p[0] = p[1] + p[3]
     
     def p_expression_word(self, p):
-        '''phrase : WORD'''
+        """phrase : WORD"""
         p[0] = [p[1]]
 
 
