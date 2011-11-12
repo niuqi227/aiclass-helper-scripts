@@ -2,7 +2,7 @@ import fractions
 import unittest
 import itertools
 
-from aiclass import search, bayes, propositional
+from aiclass import search, bayes, propositional, plan
 
 
 
@@ -212,6 +212,42 @@ class TestAstarSearch(unittest.TestCase):
         self.assertEqual(searcher.expand(), 'd1')
 
 
+GENERAL_BAYES_NET_DATA = '''
+a -> b
+a -> c
+a -> d
+b -> e
+c -> f
+d -> f
+'''
+
+GENERAL_BAYES_NET2_DATA = '''
+a -> d
+b -> d
+c -> d
+d -> e
+d -> f
+d -> g
+c -> g
+'''
+
+GENERAL_BAYES_NET3_DATA = '''
+BA -> BD
+BD -> BM
+BD -> BF
+AB -> BF
+FBB -> BF
+BF -> L
+BF -> OL
+BF -> GG
+BF -> CWS
+NO -> OL
+NO -> DS
+NG -> GG
+NG -> CWS
+FLB -> CWS
+SB -> CWS
+'''
 
 PARAMETER_COUNT_DATA = '''
 a -> b
@@ -223,9 +259,17 @@ c -> d
 '''
 
 
-
 class TestBayesParameterCount(unittest.TestCase):
-        
+
+    def test_general_bayes_net_data(self):
+        self.assertEqual(bayes.parameters(GENERAL_BAYES_NET_DATA), 13)
+
+    def test_general_bayes_net2_data(self):
+        self.assertEqual(bayes.parameters(GENERAL_BAYES_NET2_DATA), 19)
+
+    def test_general_bayes_net3_data(self):
+        self.assertEqual(bayes.parameters(GENERAL_BAYES_NET3_DATA), 47)
+
     def test_parameter_count(self):
         self.assertEqual(bayes.parameters(PARAMETER_COUNT_DATA), 16)
 
@@ -333,6 +377,77 @@ class TestPropositional(unittest.TestCase):
         self.assertEqual(propositional.Parser().parse("big|dumb|(big=>dumb)").validate(), 'V')
         self.assertEqual(propositional.Parser().parse("big&dumb<=>~(~big|~dumb)").validate(), 'V')
     
+
+
+MONKEYS_AND_BANANAS_DATA = '''
+init()[]{
+At(monkey,a),
+At(bananas,b),
+At(box,c),
+Height(monkey,low),
+Height(box,low),
+Height(bananas,high),
+Pushable(box),
+Climbable(box)}.
+
+go(X,Y)[
+At(monkey,X)]{
+~At(monkey,X),
+At(monkey,Y)}.
+
+push(B,X,Y)[
+At(monkey,X),
+Pushable(B)]{
+~At(B,X),
+~At(monkey,X),
+At(B,Y),
+At(monkey,Y)}.
+
+climbup(B)[
+At(monkey,X),
+At(B,X),
+Climbable(B)]{
+~Height(monkey,low),
+On(monkey,B),
+Height(monkey,high)}.
+
+grasp(B)[
+Height(monkey,H),
+Height(B,H),
+At(monkey,X),
+At(B,X)]{
+Have(monkey,B)}.
+
+climbdown(B)[
+On(monkey,B),
+Height(monkey,high)]{
+~On(monkey,B),
+~Height(monkey,high),
+Height(monkey,low)}.
+
+init.
+At(monkey,a).
+go(a,c).
+push(box,c,b).
+climbup(box).
+grasp(bananas).
+climbdown(box).'''
+
+
+class TestMonkeyAndBananas(unittest.TestCase):
+
+    def setUp(self):
+        self.db = plan.ClassicPlanDatabase()
+        self.db.evaluate(MONKEYS_AND_BANANAS_DATA)
+
+    def test_monkeys_and_bananas(self):
+        self.assertTrue(self.db.eval('''Have(monkey,bananas).'''))
+        self.assertFalse(self.db.eval('''At(box,c).'''))
+        self.assertTrue(self.db.eval('''At(monkey,b).'''))
+        self.assertTrue(self.db.eval('''At(bananas,b).'''))
+        self.assertFalse(self.db.eval('''Height(monkey,high).'''))
+        self.assertTrue(self.db.eval('''Height(bananas,high).'''))
+
 
 
 

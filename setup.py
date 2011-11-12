@@ -3,7 +3,7 @@
 from setuptools import setup
 
 setup(
-    name='aiclass-helper-scriptes',
+    name='aiclass-helper-scripts',
     version='0.0',
 
     url='https://github.com/bhuztez/aiclass-helper-scripts',
