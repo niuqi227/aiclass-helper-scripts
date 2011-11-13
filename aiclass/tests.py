@@ -2,7 +2,7 @@ import fractions
 import unittest
 import itertools
 
-from aiclass import search, bayes, propositional, plan
+from aiclass import search, bayes, propositional, plan, dsep
 
 
 
@@ -212,6 +212,10 @@ class TestAstarSearch(unittest.TestCase):
         self.assertEqual(searcher.expand(), 'd1')
 
 
+BAYES_NETWORK_DATA = '''
+a -> b
+'''
+
 GENERAL_BAYES_NET_DATA = '''
 a -> b
 a -> c
@@ -261,20 +265,103 @@ c -> d
 
 class TestBayesParameterCount(unittest.TestCase):
 
-    def test_general_bayes_net_data(self):
+    def test_bayes_network(self):
+        self.assertEqual(bayes.parameters(BAYES_NETWORK_DATA), 3)
+
+    def test_general_bayes_net(self):
         self.assertEqual(bayes.parameters(GENERAL_BAYES_NET_DATA), 13)
 
-    def test_general_bayes_net2_data(self):
+    def test_general_bayes_net2(self):
         self.assertEqual(bayes.parameters(GENERAL_BAYES_NET2_DATA), 19)
 
-    def test_general_bayes_net3_data(self):
+    def test_general_bayes_net3(self):
         self.assertEqual(bayes.parameters(GENERAL_BAYES_NET3_DATA), 47)
 
     def test_parameter_count(self):
         self.assertEqual(bayes.parameters(PARAMETER_COUNT_DATA), 16)
 
 
-    
+
+D_SEPARATION_DATA = '''
+A -> B
+B -> C
+A -> D
+D -> E
+'''
+
+D_SEPARATION2_DATA = '''
+A -> C
+B -> C
+C -> D
+C -> E
+'''
+
+D_SEPARATION3_DATA = '''
+A -> B
+C -> B
+B -> D
+F -> E
+E -> D
+D -> G
+H -> G
+'''
+
+CONDITIONAL_INDEPENDENCE_DATA = '''
+A -> B
+A -> C
+B -> D
+C -> D
+'''
+
+CONDITIONAL_INDEPENDENCE2_DATA = '''
+A -> B
+A -> E
+A -> D
+C -> D
+B -> E
+D -> E
+'''
+
+class TestConditionIndependence(unittest.TestCase):
+
+    def test_d_separation(self):
+        validator = dsep.Validator(D_SEPARATION_DATA)
+        self.assertFalse(validator.validate("C_|_A"))
+        self.assertTrue(validator.validate("C_|_A|B"))
+        self.assertFalse(validator.validate("C_|_D"))
+        self.assertTrue(validator.validate("C_|_D|A"))
+        self.assertTrue(validator.validate("E_|_C|D"))
+
+    def test_d_separation2(self):
+        validator = dsep.Validator(D_SEPARATION2_DATA)
+        self.assertFalse(validator.validate("A_|_E"))
+        self.assertFalse(validator.validate("A_|_E|B"))
+        self.assertTrue(validator.validate("A_|_E|C"))
+        self.assertTrue(validator.validate("A_|_B"))
+        self.assertFalse(validator.validate("A_|_B|C"))
+
+    def test_d_separation3(self):
+        validator = dsep.Validator(D_SEPARATION3_DATA)
+        self.assertTrue(validator.validate("F_|_A"))
+        self.assertFalse(validator.validate("F_|_A|D"))
+        self.assertFalse(validator.validate("F_|_A|G"))
+        self.assertTrue(validator.validate("F_|_A|H"))
+        
+    def test_conditional_independence(self):
+        validator = dsep.Validator(CONDITIONAL_INDEPENDENCE_DATA)
+        self.assertFalse(validator.validate("B_|_C"))
+        self.assertFalse(validator.validate("B_|_C|D"))
+        self.assertTrue(validator.validate("B_|_C|A"))
+        self.assertFalse(validator.validate("B_|_C|A,D"))
+
+    def test_conditional_independence2(self):
+        validator = dsep.Validator(CONDITIONAL_INDEPENDENCE2_DATA)
+        self.assertFalse(validator.validate("C_|_E|A"))
+        self.assertFalse(validator.validate("B_|_D|C,E"))
+        self.assertFalse(validator.validate("A_|_C|E"))
+        self.assertTrue(validator.validate("A_|_C|B"))
+
+
 SPAM_HAM_DATA = '''
 SPAM:
 OFFER IS SECRET,
@@ -289,43 +376,6 @@ SPORTS IS TODAY,
 SPORTS COSTS MONEY.
 '''
 
-
-
-class TestSpamHam(unittest.TestCase):
-
-    def setUp(self):
-        self.material = bayes.MaterialParser().parse(SPAM_HAM_DATA)
-        
-    def test_7_spam_detection(self):
-        self.assertEqual(self.material.size_of_vocabulary(), 12)
-
-    def test_8_question(self):
-        self.assertEqual(self.material.query('''SPAM'''), fractions.Fraction(3, 8))
-
-    def test_9_maximum_likelihood_1(self):
-        self.assertEqual(self.material.query('''"SECRET"|SPAM'''), fractions.Fraction(1,3))
-        self.assertEqual(self.material.query('''"SECRET"|HAM'''), fractions.Fraction(1,15))
-
-    def test_11_question(self):
-        self.assertEqual(self.material.query('''SPAM|"SPORTS"'''), fractions.Fraction(1, 6))
-
-    def test_12_question(self):
-        self.assertEqual(self.material.query('''SPAM|"SECRET IS SECRET"'''), fractions.Fraction(25, 26))
-
-    def test_13_question(self):
-        self.assertEqual(self.material.query('''SPAM|"TODAY IS SECRET"'''), 0)
-        
-    def test_15_question(self):
-        self.assertEqual(self.material.query('''SPAM''', laplace=1), fractions.Fraction(2,5))
-        self.assertEqual(self.material.query('''HAM''', laplace=1), fractions.Fraction(3,5)) 
-        self.assertEqual(self.material.query('''"TODAY"|SPAM''', laplace=1), fractions.Fraction(1,21))
-        self.assertEqual(self.material.query('''"TODAY"|HAM''', laplace=1), fractions.Fraction(1,9))
-
-    def test_16_question(self):
-        self.assertEqual(self.material.query('''SPAM|"TODAY IS SECRET"''', laplace=1), fractions.Fraction(324, 667))
-
-
-
 MOVIE_SONG_DATA = '''
 MOVIE:
 A PERFECT WORD,
@@ -339,25 +389,33 @@ ANOTHER RAINY DAY.
 '''
 
 
-
-class TestMovieSong(unittest.TestCase):
-
-    def setUp(self):
-        self.material = bayes.MaterialParser().parse(MOVIE_SONG_DATA)
-
-    def test_naive_bayes(self):
-        self.assertEqual(self.material.query('''MOVIE''', laplace=1), fractions.Fraction(1, 2))
-        self.assertEqual(self.material.query('''SONG''', laplace=1), fractions.Fraction(1, 2))
-        self.assertEqual(self.material.query('''"PERFECT"|MOVIE''', laplace=1), fractions.Fraction(3, 19))
-        self.assertEqual(self.material.query('''"PERFECT"|SONG''', laplace=1), fractions.Fraction(2, 19))
-        self.assertEqual(self.material.query('''"STORM"|MOVIE''', laplace=1), fractions.Fraction(1, 19))
-        self.assertEqual(self.material.query('''"STORM"|SONG''', laplace=1), fractions.Fraction(2, 19))
-
-    def test_naive_bayes2(self):
-        self.assertEqual(self.material.query('''MOVIE|"PERFECT STORM"''', laplace=1), fractions.Fraction(3, 7))
+class TestNaiveBayes(unittest.TestCase):
         
-    def test_maximum_likelihood(self):
-        self.assertEqual(self.material.query('''MOVIE|"PERFECT STORM"'''), 0)
+    def test_spam_ham(self):
+        material = bayes.MaterialParser().parse(SPAM_HAM_DATA)
+        self.assertEqual(material.size_of_vocabulary(), 12)
+        self.assertEqual(material.query('''SPAM'''), fractions.Fraction(3, 8))
+        self.assertEqual(material.query('''"SECRET"|SPAM'''), fractions.Fraction(1,3))
+        self.assertEqual(material.query('''"SECRET"|HAM'''), fractions.Fraction(1,15))
+        self.assertEqual(material.query('''SPAM|"SPORTS"'''), fractions.Fraction(1, 6))
+        self.assertEqual(material.query('''SPAM|"SECRET IS SECRET"'''), fractions.Fraction(25, 26))
+        self.assertEqual(material.query('''SPAM|"TODAY IS SECRET"'''), 0)
+        self.assertEqual(material.query('''SPAM''', laplace=1), fractions.Fraction(2,5))
+        self.assertEqual(material.query('''HAM''', laplace=1), fractions.Fraction(3,5)) 
+        self.assertEqual(material.query('''"TODAY"|SPAM''', laplace=1), fractions.Fraction(1,21))
+        self.assertEqual(material.query('''"TODAY"|HAM''', laplace=1), fractions.Fraction(1,9))
+        self.assertEqual(material.query('''SPAM|"TODAY IS SECRET"''', laplace=1), fractions.Fraction(324, 667))
+
+    def test_movie_song(self):
+        material = bayes.MaterialParser().parse(MOVIE_SONG_DATA)
+        self.assertEqual(material.query('''MOVIE''', laplace=1), fractions.Fraction(1, 2))
+        self.assertEqual(material.query('''SONG''', laplace=1), fractions.Fraction(1, 2))
+        self.assertEqual(material.query('''"PERFECT"|MOVIE''', laplace=1), fractions.Fraction(3, 19))
+        self.assertEqual(material.query('''"PERFECT"|SONG''', laplace=1), fractions.Fraction(2, 19))
+        self.assertEqual(material.query('''"STORM"|MOVIE''', laplace=1), fractions.Fraction(1, 19))
+        self.assertEqual(material.query('''"STORM"|SONG''', laplace=1), fractions.Fraction(2, 19))
+        self.assertEqual(material.query('''MOVIE|"PERFECT STORM"''', laplace=1), fractions.Fraction(3, 7))
+        self.assertEqual(material.query('''MOVIE|"PERFECT STORM"'''), 0)
 
 
 

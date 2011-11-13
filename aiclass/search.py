@@ -29,26 +29,6 @@ class Problem(object):
 
 
 
-class Frontier(object):
-
-
-    def __init__(self, searcher, depth_limit=None):
-        raise NotImplementedError
-
-
-    def add(self, state, depth):
-        raise NotImplementedError
-
-
-    def next(self):
-        raise NotImplementedError
-
-
-    def __nonzero__(self):
-        raise NotImplementedError
-
-
-
 class Searcher(object):
 
 
@@ -72,19 +52,27 @@ class Searcher(object):
         raise NotImplementedError
 
 
+    def is_visited(self, state):
+        return state in self.path_to
+        
+    
+    def get_visited(self):
+        return self.path_to.keys()
+        
+    
+    def get_explored(self):
+        return [ s for s in self.path_to.keys() if s not in self._frontier ]
+
+
+    def log_path(self, from_state, action, to_state):
+        self.path_to[to_state] = from_state, action
+
+
     def path_cost(self, to_state):
         from_state, action = self.path_to[to_state]
         if from_state is None:
             return 0
         return self.path_cost(from_state) + self.problem.cost(action)
-
-
-    def is_explored(self, state):
-        return state in self.path_to
-
-
-    def log_path(self, from_state, action, to_state):
-        self.path_to[to_state] = from_state, action
 
 
     def expand(self):
@@ -97,7 +85,7 @@ class Searcher(object):
             for action in self.problem.actions(state):
                 next_state = self.problem.result(action)
             
-                if self.is_explored(next_state):
+                if self.is_visited(next_state):
                     if self.path_cost(state) + self.problem.cost(action) < self.path_cost(next_state):
                         self.log_path(state, action, next_state)
                 else:
@@ -109,7 +97,10 @@ class Searcher(object):
 
     def search(self):
         while self.goal_reached is None:
+            if not self._frontier:
+                return False
             self.expand()
+        return self.goal_reached
 
 
     def get_solution_state_path(self):
