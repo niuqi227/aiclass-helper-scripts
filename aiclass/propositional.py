@@ -41,7 +41,6 @@ class Symbol(BaseExpr):
             return symbols
 
 
-
 class UnOp(BaseExpr):
 
     def __init__(self, op, inner):
@@ -53,7 +52,6 @@ class UnOp(BaseExpr):
 
     def find_symbols(self, symbols):
         return self.inner.find_symbols(symbols)
-
 
 
 class BinOp(BaseExpr):
@@ -86,6 +84,7 @@ class Parser(SimpleParser):
     t_OR = CONST(r'\|', operator.__or__)
     t_IMPLY = CONST(r'\=\>', lambda a,b: (not a) or b)
     t_EQUAL = CONST(r'\<\=\>', operator.__eq__)
+    t_ignore = ' '
     literals = ['(', ')']
 
     precedence = [

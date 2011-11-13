@@ -61,7 +61,7 @@ class Searcher(object):
         
     
     def get_explored(self):
-        return [ s for s in self.path_to.keys() if s not in self._frontier ]
+        return [ s for s in self.path_to.keys() if s not in map(lambda f: f[0], self._frontier) ]
 
 
     def log_path(self, from_state, action, to_state):
@@ -98,28 +98,26 @@ class Searcher(object):
     def search(self):
         while self.goal_reached is None:
             if not self._frontier:
-                return False
+                return
             self.expand()
         return self.goal_reached
-
-
-    def get_solution_state_path(self):
+        
+    
+    def trace_states(self, state=None):
+        state = self.goal_reached if state is None else state
         path = []
-        state = self.goal_reached
         while state is not None:
             path = [state] + path
             state, action = self.path_to[state]
-
         return path
 
 
-    def get_solution_action_path(self):
+    def trace_actions(self, state=None):
+        state = self.goal_reached if state is None else state
         path = []
-        state = self.goal_reached
         while state is not None:
             state, action = self.path_to[state]
             path = [action] + path
-
         return path
 
 
@@ -161,12 +159,15 @@ class AstarSearcher(Searcher):
 
 
 class MapRoutingProblem(Problem):
+    initial = None
+    goal = None
+    paths = None
+    heuristics = None
 
-    def __init__(self, initial, goal, path, heuristic):
-        self.initial = initial
-        self.goal = goal
-        self.edges = self.parse_path(path)
-        self.h = self.parse_heuristic(heuristic)
+    def __init__(self):
+        self.edges = self.parse_path(self.paths)
+        if self.heuristics:
+            self.h = self.parse_heuristic(self.heuristics)
 
 
     def parse_path(self, data):
@@ -215,64 +216,14 @@ class MapRoutingProblem(Problem):
 
 
 
-ROMANIA_MAP_DATA = '''
-Arad -> Zerind: 75
-Arad -> Timisoara: 118
-Arad -> Sibiu: 140
-Zerind -> Oradea: 71
-Oradea -> Sibiu: 151
-Timisoara -> Lugoj: 111
-Lugoj -> Mehadia: 70
-Mehadia -> Drobeta: 75
-Drobeta -> Craiova: 120
-Craiova -> Rimnicu Vilcea: 146
-Craiova -> Pitesti: 138
-Rimnicu Vilcea -> Sibiu: 80
-Rimnicu Vilcea -> Pitesti: 97
-Pitesti -> Bucharest: 101
-Sibiu -> Fagaras: 99
-Fagaras -> Bucharest: 211
-'''
+class NodeCountProblem(Problem):
+    initial = None
+    goal = None
+    paths = None
 
-
-
-DISTANCE_TO_BUCHAREST = '''
-Arad: 366
-Zerind: 374
-Oradea: 380
-Sibiu: 253
-Timisoara: 329
-Lugoj: 244
-Mehadia: 241
-Drobeta: 242
-Craiova: 160
-Fagaras: 176
-Rimnicu Vilcea: 193
-Pitesti: 100
-Bucharest: 0
-'''
-
-
-
-class RomaniaProblem(MapRoutingProblem):
 
     def __init__(self):
-        MapRoutingProblem.__init__(
-            self,
-            'Arad',
-            'Bucharest',
-            ROMANIA_MAP_DATA,
-            DISTANCE_TO_BUCHAREST)
-
-
-
-class NodeCountProblem(Problem):
-
-
-    def __init__(self, initial, goal, data):
-        self.initial = initial
-        self.goal = goal
-        self.edges = parse_graph(data)
+        self.edges = parse_graph(self.paths)
 
 
     def actions(self, state):
@@ -295,49 +246,5 @@ class NodeCountProblem(Problem):
         return state == self.goal
 
 
-        
-class AstarSearchProblem(Problem):
-
-
-    def __init__(self):
-        self.h = {}
-        for y in ['a','b','c','d']:
-            for x in [1,2,3,4,5,6]:
-                self.h['%s%d'%(y,x)] = min([ord('d')-ord(y)+1, 6-x+1])
-        self.h['d6'] = 0
-
-
-    def actions(self, state):
-        y, x = state
-        actions = []
-        if y != 'a':
-            actions.append('%s%s'%(chr(ord(y)-1), x))
-        if y != 'd':
-            actions.append('%s%s'%(chr(ord(y)+1), x))
-        if x != '1':
-            actions.append('%s%s'%(y, chr(ord(x)-1)))
-        if x != '6':
-            actions.append('%s%s'%(y, chr(ord(x)+1)))
-        return actions
-
-
-    def result(self, action):
-        return action
-
-
-    def cost(self, action):
-        return 1
-
-
-    def get_initial(self):
-        return 'a1'
-
-
-    def goal_test(self, state):
-        return state == 'd6'
-
-
-    def heuristic(self, state):
-        return self.h[state]
         
 

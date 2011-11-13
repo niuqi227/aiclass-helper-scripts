@@ -2,15 +2,13 @@ import fractions
 import unittest
 import itertools
 
-from aiclass import search, bayes, propositional, plan, dsep
-
+from aiclass import search, naive, propositional, plan, network, data
 
 
 class TestRomania(unittest.TestCase):
 
     def setUp(self):
-        self.problem = search.RomaniaProblem()
-    
+        self.problem = data.ROMANIA_PROBLEM()
 
     def test_uniform_cost_search(self):
         searcher = search.CfsSearcher(self.problem)
@@ -29,9 +27,8 @@ class TestRomania(unittest.TestCase):
         self.assertEqual(searcher.expand(), 'Bucharest')
         self.assertEqual(searcher.goal_reached, 'Bucharest')
         self.assertEqual(
-            searcher.get_solution_state_path(),
+            searcher.trace_states(),
             ['Arad', 'Sibiu', 'Rimnicu Vilcea', 'Pitesti', 'Bucharest'])
-
 
     def test_astar_search(self):
         searcher = search.AstarSearcher(self.problem)
@@ -42,167 +39,57 @@ class TestRomania(unittest.TestCase):
         self.assertEqual(searcher.expand(), 'Pitesti')
         self.assertEqual(searcher.expand(), 'Bucharest')
         self.assertEqual(
-            searcher.get_solution_state_path(),
+            searcher.trace_states(),
             ['Arad', 'Sibiu', 'Rimnicu Vilcea', 'Pitesti', 'Bucharest'])
 
 
+class TestNodeCount(object):
 
-class NodeCountProblemMixin(object):
-    initial, goal, data, bfs_count, dfs_count = None, None, None, None, None
-
-    def setUp(self):
-        self.problem = search.NodeCountProblem(
-            self.initial,
-            self.goal,
-            self.data)
-
-    def test_bfs(self):
-        searcher = search.BfsSearcher(self.problem)
+    def assertBFS(self, problem, count):
+        searcher = search.BfsSearcher(problem)
         searcher.search()
-        self.assertEqual(searcher.expand_count, self.bfs_count)
-
-    def test_dfs(self):
-        searcher = search.DfsSearcher(self.problem)
+        self.assertEqual(searcher.expand_count, count)
+    
+    def assertDFS(self, problem, count):
+        searcher = search.DfsSearcher(problem)
         searcher.search()
-        self.assertEqual(searcher.expand_count, self.dfs_count)
+        self.assertEqual(searcher.expand_count, count)
 
+    def test_search_tree_ltr(self):
+        problem = data.SEARCH_TREE_LTR_PROBLEM()
+        self.assertBFS(problem, 6)
+        self.assertDFS(problem, 4)
 
+    def test_search_tree_rtl(self):
+        problem = data.SEARCH_TREE_RTL_PROBLEM()
+        self.assertBFS(problem, 9)
+        self.assertDFS(problem, 9)
 
-SEARCH_TREE_DATA = '''
-1 -> 2
-1 -> 3
-1 -> 4
-2 -> 5
-2 -> 6
-3 -> 7
-3 -> 8
-4 -> 9
-4 -> 10
-'''
+    def test_search_tree_2_ltr(self):
+        problem = data.SEARCH_TREE_2_LTR_PROBLEM()
+        self.assertBFS(problem, 13)
+        self.assertDFS(problem, 10)
 
+    def test_search_tree_2_rtl(self):
+        problem = data.SEARCH_TREE_2_RTL_PROBLEM()
+        self.assertBFS(problem, 11)
+        self.assertDFS(problem, 7)
 
+    def test_search_network_ltr(self):
+        problem = data.SEARCH_NETWORK_LTR_PROBLEM()
+        self.assertBFS(problem, 10)
+        self.assertDFS(problem, 16)
 
-class TestSearchTree_LeftToRight(NodeCountProblemMixin, unittest.TestCase):
-    initial = '1'
-    goal = '6'
-    data = SEARCH_TREE_DATA
-    bfs_count = 6
-    dfs_count = 4
-
-
-
-class TestSearchTree_RightToLeft(NodeCountProblemMixin, unittest.TestCase):
-    initial = '1'
-    goal = '9'
-    data = SEARCH_TREE_DATA
-    bfs_count = 9
-    dfs_count = 9
-
-
-
-SEARCH_TREE2_DATA_LEFT_TO_RIGHT = '''
-1 -> 2
-1 -> 3
-1 -> 4
-2 -> 5
-2 -> 6
-3 -> 7
-3 -> 8
-4 -> 9
-4 -> 10
-7 -> 11
-7 -> 12
-8 -> 13
-'''
-
-
-
-class TestSearchTree2_LeftToRight(NodeCountProblemMixin, unittest.TestCase):
-    initial = '1'
-    goal = '13'
-    data = SEARCH_TREE2_DATA_LEFT_TO_RIGHT
-    bfs_count = 13
-    dfs_count = 10
-
-
-
-SEARCH_TREE2_DATA_RIGHT_TO_LEFT = '''
-1 -> 2
-1 -> 3
-1 -> 4
-2 -> 5
-2 -> 6
-3 -> 7
-3 -> 8
-4 -> 9
-4 -> 10
-7 -> 11
-8 -> 12
-8 -> 13
-'''
-
-
-
-class TestSearchTree2_RightToLeft(NodeCountProblemMixin, unittest.TestCase):
-    initial = '1'
-    goal = '11'
-    data = SEARCH_TREE2_DATA_RIGHT_TO_LEFT
-    bfs_count = 11
-    dfs_count = 7
-
-
-
-SEARCH_NETWORK_DATA = '''
-1 -> 2
-1 -> 3
-2 -> 4
-2 -> 5
-3 -> 5
-3 -> 6
-4 -> 7
-4 -> 8
-5 -> 8
-5 -> 9
-6 -> 9
-6 -> 10
-7 -> 11
-8 -> 11
-8 -> 12
-9 -> 12
-9 -> 13
-10 -> 13
-11 -> 14
-12 -> 14
-12 -> 15
-13 -> 15
-14 -> 16
-15 -> 16
-'''
-
-
-
-class TestSearchNetwork_LeftToRight(NodeCountProblemMixin, unittest.TestCase):
-    initial = '1'
-    goal = '10'
-    data = SEARCH_NETWORK_DATA
-    bfs_count = 10
-    dfs_count = 16
-
-
-
-class TestSearchNetwork_RightToLeft(NodeCountProblemMixin, unittest.TestCase):
-    initial = '1'
-    goal = '7'
-    data = SEARCH_NETWORK_DATA
-    bfs_count = 7
-    dfs_count = 4
-
+    def test_search_network_rtl(self):
+        problem = data.SEARCH_NETWORK_RTL_PROBLEM()
+        self.assertBFS(problem, 7)
+        self.assertDFS(problem, 4)
 
 
 class TestAstarSearch(unittest.TestCase):
 
     def setUp(self):
-        self.problem = search.AstarSearchProblem()
+        self.problem = data.ASTAR_SEARCH_PROBLEM()
 
     def test_astar_search(self):
         searcher = search.AstarSearcher(self.problem)
@@ -212,187 +99,71 @@ class TestAstarSearch(unittest.TestCase):
         self.assertEqual(searcher.expand(), 'd1')
 
 
-BAYES_NETWORK_DATA = '''
-a -> b
-'''
-
-GENERAL_BAYES_NET_DATA = '''
-a -> b
-a -> c
-a -> d
-b -> e
-c -> f
-d -> f
-'''
-
-GENERAL_BAYES_NET2_DATA = '''
-a -> d
-b -> d
-c -> d
-d -> e
-d -> f
-d -> g
-c -> g
-'''
-
-GENERAL_BAYES_NET3_DATA = '''
-BA -> BD
-BD -> BM
-BD -> BF
-AB -> BF
-FBB -> BF
-BF -> L
-BF -> OL
-BF -> GG
-BF -> CWS
-NO -> OL
-NO -> DS
-NG -> GG
-NG -> CWS
-FLB -> CWS
-SB -> CWS
-'''
-
-PARAMETER_COUNT_DATA = '''
-a -> b
-a -> d
-a -> e
-b -> e
-d -> e
-c -> d
-'''
-
-
 class TestBayesParameterCount(unittest.TestCase):
 
+    def assertParams(self, data, params):
+        self.assertEqual(network.BayesNetwork(data).parameters(), params)
+
     def test_bayes_network(self):
-        self.assertEqual(bayes.parameters(BAYES_NETWORK_DATA), 3)
+        self.assertParams(data.BAYES_NETWORK_DATA, 3)
 
     def test_general_bayes_net(self):
-        self.assertEqual(bayes.parameters(GENERAL_BAYES_NET_DATA), 13)
+        self.assertParams(data.GENERAL_BAYES_NET_DATA, 13)
 
-    def test_general_bayes_net2(self):
-        self.assertEqual(bayes.parameters(GENERAL_BAYES_NET2_DATA), 19)
+    def test_general_bayes_net_2(self):
+        self.assertParams(data.GENERAL_BAYES_NET_2_DATA, 19)
 
-    def test_general_bayes_net3(self):
-        self.assertEqual(bayes.parameters(GENERAL_BAYES_NET3_DATA), 47)
+    def test_general_bayes_net_3(self):
+        self.assertParams(data.GENERAL_BAYES_NET_3_DATA, 47)
 
     def test_parameter_count(self):
-        self.assertEqual(bayes.parameters(PARAMETER_COUNT_DATA), 16)
+        self.assertParams(data.PARAMETER_COUNT_DATA, 16)
 
-
-
-D_SEPARATION_DATA = '''
-A -> B
-B -> C
-A -> D
-D -> E
-'''
-
-D_SEPARATION2_DATA = '''
-A -> C
-B -> C
-C -> D
-C -> E
-'''
-
-D_SEPARATION3_DATA = '''
-A -> B
-C -> B
-B -> D
-F -> E
-E -> D
-D -> G
-H -> G
-'''
-
-CONDITIONAL_INDEPENDENCE_DATA = '''
-A -> B
-A -> C
-B -> D
-C -> D
-'''
-
-CONDITIONAL_INDEPENDENCE2_DATA = '''
-A -> B
-A -> E
-A -> D
-C -> D
-B -> E
-D -> E
-'''
 
 class TestConditionIndependence(unittest.TestCase):
 
     def test_d_separation(self):
-        validator = dsep.Validator(D_SEPARATION_DATA)
+        validator = network.BayesNetwork(data.D_SEPARATION_DATA)
         self.assertFalse(validator.validate("C_|_A"))
         self.assertTrue(validator.validate("C_|_A|B"))
         self.assertFalse(validator.validate("C_|_D"))
         self.assertTrue(validator.validate("C_|_D|A"))
         self.assertTrue(validator.validate("E_|_C|D"))
 
-    def test_d_separation2(self):
-        validator = dsep.Validator(D_SEPARATION2_DATA)
+    def test_d_separation_2(self):
+        validator = network.BayesNetwork(data.D_SEPARATION_2_DATA)
         self.assertFalse(validator.validate("A_|_E"))
         self.assertFalse(validator.validate("A_|_E|B"))
         self.assertTrue(validator.validate("A_|_E|C"))
         self.assertTrue(validator.validate("A_|_B"))
         self.assertFalse(validator.validate("A_|_B|C"))
 
-    def test_d_separation3(self):
-        validator = dsep.Validator(D_SEPARATION3_DATA)
+    def test_d_separation_3(self):
+        validator = network.BayesNetwork(data.D_SEPARATION_3_DATA)
         self.assertTrue(validator.validate("F_|_A"))
         self.assertFalse(validator.validate("F_|_A|D"))
         self.assertFalse(validator.validate("F_|_A|G"))
         self.assertTrue(validator.validate("F_|_A|H"))
         
     def test_conditional_independence(self):
-        validator = dsep.Validator(CONDITIONAL_INDEPENDENCE_DATA)
+        validator = network.BayesNetwork(data.CONDITIONAL_INDEPENDENCE_DATA)
         self.assertFalse(validator.validate("B_|_C"))
         self.assertFalse(validator.validate("B_|_C|D"))
         self.assertTrue(validator.validate("B_|_C|A"))
         self.assertFalse(validator.validate("B_|_C|A,D"))
 
-    def test_conditional_independence2(self):
-        validator = dsep.Validator(CONDITIONAL_INDEPENDENCE2_DATA)
+    def test_conditional_independence_2(self):
+        validator = network.BayesNetwork(data.CONDITIONAL_INDEPENDENCE_2_DATA)
         self.assertFalse(validator.validate("C_|_E|A"))
         self.assertFalse(validator.validate("B_|_D|C,E"))
         self.assertFalse(validator.validate("A_|_C|E"))
         self.assertTrue(validator.validate("A_|_C|B"))
 
 
-SPAM_HAM_DATA = '''
-SPAM:
-OFFER IS SECRET,
-CLICK SECRET LINK,
-SECRET SPORTS LINK.
-
-HAM:
-PLAY SPORTS TODAY,
-WENT PLAY SPORTS,
-SECRET SPORTS EVENT,
-SPORTS IS TODAY,
-SPORTS COSTS MONEY.
-'''
-
-MOVIE_SONG_DATA = '''
-MOVIE:
-A PERFECT WORD,
-MY PERFECT WOMAN,
-PRETTY WOMAN.
-
-SONG:
-A PERFECT DAY,
-ELECTRIC STORM,
-ANOTHER RAINY DAY.
-'''
-
-
 class TestNaiveBayes(unittest.TestCase):
         
     def test_spam_ham(self):
-        material = bayes.MaterialParser().parse(SPAM_HAM_DATA)
+        material = naive.MaterialParser().parse(data.SPAM_HAM_DATA)
         self.assertEqual(material.size_of_vocabulary(), 12)
         self.assertEqual(material.query('''SPAM'''), fractions.Fraction(3, 8))
         self.assertEqual(material.query('''"SECRET"|SPAM'''), fractions.Fraction(1,3))
@@ -407,7 +178,7 @@ class TestNaiveBayes(unittest.TestCase):
         self.assertEqual(material.query('''SPAM|"TODAY IS SECRET"''', laplace=1), fractions.Fraction(324, 667))
 
     def test_movie_song(self):
-        material = bayes.MaterialParser().parse(MOVIE_SONG_DATA)
+        material = naive.MaterialParser().parse(data.MOVIE_SONG_DATA)
         self.assertEqual(material.query('''MOVIE''', laplace=1), fractions.Fraction(1, 2))
         self.assertEqual(material.query('''SONG''', laplace=1), fractions.Fraction(1, 2))
         self.assertEqual(material.query('''"PERFECT"|MOVIE''', laplace=1), fractions.Fraction(3, 19))
@@ -418,94 +189,40 @@ class TestNaiveBayes(unittest.TestCase):
         self.assertEqual(material.query('''MOVIE|"PERFECT STORM"'''), 0)
 
 
-
 class TestPropositional(unittest.TestCase):
 
+    def setUp(self):
+        self.parser = propositional.Parser()
+        
+    def assertProps(self, statement, result):
+        self.assertEqual(self.parser.parse(statement).validate(), result)
+
     def test_terminology(self):
-        self.assertEqual(propositional.Parser().parse("p|~p").validate(), 'V')
-        self.assertEqual(propositional.Parser().parse("p&~p").validate(), 'U')
-        self.assertEqual(propositional.Parser().parse("p|q|(p<=>q)").validate(), 'V')
-        self.assertEqual(propositional.Parser().parse("(p=>q)|(q=>p)").validate(), 'V')
-        self.assertEqual(propositional.Parser().parse("((food=>party)|(drinks=>party))=>((food&drinks)=>party)").validate(), 'V')
+        self.assertProps("p|~p", 'V')
+        self.assertProps("p&~p", 'U')
+        self.assertProps("p|q|(p<=>q)", 'V')
+        self.assertProps("(p=>q)|(q=>p)", 'V')
+        self.assertProps("((food=>party)|(drinks=>party))=>((food&drinks)=>party)", 'V')
 
     def test_logic(self):
-        self.assertEqual(propositional.Parser().parse("(smoke=>fire)<=>(smoke|~fire)").validate(), 'S')
-        self.assertEqual(propositional.Parser().parse("(smoke=>fire)<=>(~smoke=>~fire)").validate(), 'S')
-        self.assertEqual(propositional.Parser().parse("(smoke=>fire)<=>(~fire=>~smoke)").validate(), 'V')
-        self.assertEqual(propositional.Parser().parse("big|dumb|(big=>dumb)").validate(), 'V')
-        self.assertEqual(propositional.Parser().parse("big&dumb<=>~(~big|~dumb)").validate(), 'V')
-    
-
-
-MONKEYS_AND_BANANAS_DATA = '''
-init()[]{
-At(monkey,a),
-At(bananas,b),
-At(box,c),
-Height(monkey,low),
-Height(box,low),
-Height(bananas,high),
-Pushable(box),
-Climbable(box)}.
-
-go(X,Y)[
-At(monkey,X)]{
-~At(monkey,X),
-At(monkey,Y)}.
-
-push(B,X,Y)[
-At(monkey,X),
-Pushable(B)]{
-~At(B,X),
-~At(monkey,X),
-At(B,Y),
-At(monkey,Y)}.
-
-climbup(B)[
-At(monkey,X),
-At(B,X),
-Climbable(B)]{
-~Height(monkey,low),
-On(monkey,B),
-Height(monkey,high)}.
-
-grasp(B)[
-Height(monkey,H),
-Height(B,H),
-At(monkey,X),
-At(B,X)]{
-Have(monkey,B)}.
-
-climbdown(B)[
-On(monkey,B),
-Height(monkey,high)]{
-~On(monkey,B),
-~Height(monkey,high),
-Height(monkey,low)}.
-
-init.
-At(monkey,a).
-go(a,c).
-push(box,c,b).
-climbup(box).
-grasp(bananas).
-climbdown(box).'''
+        self.assertProps("(smoke=>fire)<=>(smoke|~fire)", 'S')
+        self.assertProps("(smoke=>fire)<=>(~smoke=>~fire)", 'S')
+        self.assertProps("(smoke=>fire)<=>(~fire=>~smoke)", 'V')
+        self.assertProps("big|dumb|(big=>dumb)", 'V')
+        self.assertProps("big&dumb<=>~(~big|~dumb)", 'V')
 
 
 class TestMonkeyAndBananas(unittest.TestCase):
 
-    def setUp(self):
-        self.db = plan.ClassicPlanDatabase()
-        self.db.evaluate(MONKEYS_AND_BANANAS_DATA)
-
     def test_monkeys_and_bananas(self):
-        self.assertTrue(self.db.eval('''Have(monkey,bananas).'''))
-        self.assertFalse(self.db.eval('''At(box,c).'''))
-        self.assertTrue(self.db.eval('''At(monkey,b).'''))
-        self.assertTrue(self.db.eval('''At(bananas,b).'''))
-        self.assertFalse(self.db.eval('''Height(monkey,high).'''))
-        self.assertTrue(self.db.eval('''Height(bananas,high).'''))
-
+        db = plan.ClassicPlanDatabase()
+        db.evaluate(data.MONKEY_AND_BANANAS_DATA)
+        self.assertTrue(db.eval('''Have(monkey,bananas).'''))
+        self.assertFalse(db.eval('''At(box,c).'''))
+        self.assertTrue(db.eval('''At(monkey,b).'''))
+        self.assertTrue(db.eval('''At(bananas,b).'''))
+        self.assertFalse(db.eval('''Height(monkey,high).'''))
+        self.assertTrue(db.eval('''Height(bananas,high).'''))
 
 
 

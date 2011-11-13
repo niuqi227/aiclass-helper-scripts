@@ -4,13 +4,13 @@ from setuptools import setup
 
 setup(
     name='aiclass-helper-scripts',
-    version='0.0',
+    version='0.1',
 
     url='https://github.com/bhuztez/aiclass-helper-scripts',
     description='quick and dirty scripts can help you solve some quizzes and homeworks of ai-class',
     
     classifiers = [
-        "Development Status :: 1 - Planning",
+        "Development Status :: 2 - Pre-Alpha",
         "Environment :: Console",
         "License :: Public Domain",
         "Operating System :: POSIX :: Linux",
@@ -24,6 +24,13 @@ setup(
     
     packages=['aiclass'],
     test_suite = 'aiclass.tests',
+
+    entry_points = {
+        'console_scripts': [
+            'aiclass = aiclass.__main__:main',
+        ]
+    },
+
 )
 
 

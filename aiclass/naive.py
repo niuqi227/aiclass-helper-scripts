@@ -125,10 +125,6 @@ class Material(object):
 
 
 
-def parameters(data):
-    edges = parse_graph(data)
-    vertices = set(itertools.chain(*edges))
-    return sum(2 ** len([ a for a,b in edges if b == v ]) for v in vertices) 
 
 
 

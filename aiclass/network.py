@@ -1,6 +1,8 @@
 from aiclass.parser import SimpleParser, parse_graph
 from aiclass.search import Problem, BfsSearcher
 
+import itertools
+
 
 class StatementParser(SimpleParser):
     t_INDEPENDENT = r'\_\|\_'
@@ -23,7 +25,6 @@ class StatementParser(SimpleParser):
     def p_condition(self, p):
         """conditions : VARIABLE"""
         p[0] = [p[1]]
-
 
 
 class PathFinding(Problem):
@@ -54,18 +55,19 @@ class PathFinding(Problem):
         return state == self.goal
 
 
-
-class Validator(object):
+class BayesNetwork(object):
 
     def __init__(self, data):
         self.parser = StatementParser()
         self.edges = parse_graph(data)
 
+    def parameters(self):
+        vertices = set(itertools.chain(*self.edges))
+        return sum(2 ** len([ a for a,b in self.edges if b == v ]) for v in vertices) 
 
     def validate(self, statement):
         statement = self.parser.parse(statement)
         return self._validate(*statement)
-
 
     def _validate(self, a, b, conditions):        
         if any(BfsSearcher(
