@@ -1,5 +1,5 @@
 from aiclass.parser import SimpleParser, parse_graph
-import itertools, fractions, collections
+import itertools, fractions, collections, functools
 
 
 class MaterialParser(SimpleParser):
@@ -111,7 +111,7 @@ class Material(object):
         elif self.is_conditional(expression):
             a, b = expression
             if self.is_phrase(a) and self.is_category(b):
-                return reduce(lambda a,b: a*b, [ self.p((w,b), laplace) for w in a ])
+                return functools.reduce(lambda a,b: a*b, [ self.p((w,b), laplace) for w in a ])
             elif self.is_category(a) and self.is_phrase(b):
                 return fractions.Fraction(
                     self.P((b,a), laplace) * self.P(a, laplace),

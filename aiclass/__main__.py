@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 try:
     import readline
 except ImportError:
@@ -6,6 +8,10 @@ except ImportError:
 import argparse
 import traceback
 import sys
+
+if (sys.version_info > (3,0)):
+    raw_input = input
+
 
 def configure_search_parser(parsers):
     description='search'
@@ -93,31 +99,31 @@ def enter_search(args):
         if string == 'quit':
             break
         elif string == 'count':
-            print searcher.expand_count
+            print(searcher.expand_count)
         elif string == 'expand':
-            print searcher.expand()
+            print(searcher.expand())
         elif string == 'explored':
             for e in searcher.get_explored():
-                print e
+                print(e)
         elif string == 'frontier':
             for f in searcher._frontier:
-                print f[0]
+                print(f[0])
         elif string == 'go':
             if searcher.search():
                 for s in searcher.trace_states():
-                    print s
+                    print(s)
             else:
-                print 'search failed'
+                print('search failed')
         elif string.startswith('trace '):
             state = string[6:].strip()
             try:
                 for s in searcher.trace_states(state):
-                    print s
-            except Exception, e:
+                    print(s)
+            except Exception as e:
                 traceback.print_exception(*sys.exc_info())
         else:
-            print 'count\texpand\texplored\tfrontier\tgo\tquit\ttrace'
-    print 'quit.'
+            print('count\texpand\texplored\tfrontier\tgo\tquit\ttrace')
+    print('quit.')
 
 
 def enter_network(args):
@@ -128,14 +134,14 @@ def enter_network(args):
         if string == r'\q':
             break
         elif string == 'params':
-            print bayes_network.parameters()
+            print(bayes_network.parameters())
         else:
             try:
-                print bayes_network.validate(string)
-            except Exception, e:
+                print(bayes_network.validate(string))
+            except Exception as e:
                 traceback.print_exception(*sys.exc_info())
-                print r'Enter \q to quit'
-    print 'quit.'    
+                print(r'Enter \q to quit')
+    print('quit.')
 
 
 def enter_naive(args):
@@ -147,14 +153,14 @@ def enter_naive(args):
         if string == r'\q':
             break
         elif string == r'\size':
-            print material.size_of_vocabulary()
+            print(material.size_of_vocabulary())
         else:
             try:
-                print 'P(%s) = %s'%(string, material.query(string, laplace))
-            except Exception, e:
+                print('P(%s) = %s'%(string, material.query(string, laplace)))
+            except Exception as e:
                 traceback.print_exception(*sys.exc_info())
-                print r'Enter \q to quit'
-    print 'quit.'    
+                print(r'Enter \q to quit')
+    print('quit.')
 
 
 def enter_propos(args):
@@ -165,11 +171,11 @@ def enter_propos(args):
         if string == r'\q':
             break
         try:
-            print parser.parse(string).validate()
-        except Exception, e:
+            print(parser.parse(string).validate())
+        except Exception as e:
             traceback.print_exception(*sys.exc_info())
-            print r'Enter \q to quit'
-    print 'quit.'
+            print(r'Enter \q to quit')
+    print('quit.')
 
 
 def enter_plan(args):
@@ -182,11 +188,11 @@ def enter_plan(args):
         if string == r'\q':
             break
         try:
-            print db.eval(string)
-        except Exception, e:
+            print(db.eval(string))
+        except Exception as e:
             traceback.print_exception(*sys.exc_info())
-            print r'Enter \q to quit'
-    print 'quit.'    
+            print(r'Enter \q to quit')
+    print('quit.')
 
 
 def main():

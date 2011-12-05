@@ -148,10 +148,10 @@ class ClassicPlanDatabase(object):
         if not any(tuples):
             return True
         
-        results = dict(tuples).items()
+        results = list(dict(tuples).items())
         if not all(t in results for t in tuples):
             return False
-            
+        
         return results
 
     def _query(self, query):

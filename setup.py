@@ -1,4 +1,4 @@
-#!/usr/bin/env python2
+#!/usr/bin/env python
 
 from setuptools import setup
 
@@ -15,6 +15,7 @@ setup(
         "License :: Public Domain",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.2",
     ],
 
     author='bhuztez',
