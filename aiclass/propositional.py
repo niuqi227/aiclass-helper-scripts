@@ -1,3 +1,4 @@
+from aiclass.command import BaseCommand
 from aiclass.parser import SimpleParser
 import itertools, operator
 
@@ -113,4 +114,18 @@ class Parser(SimpleParser):
 
 
 
+
+class ProposCommand(BaseCommand):
+    name = 'props'
+    description = 'propositional logic'
+    help = 'propositional logic'
+
+    def __init__(self):
+        self.parser = Parser()
+
+    def call(self, string):
+        if string == r'\q':
+            return True
+
+        print(self.parser.parse(string).validate())
 

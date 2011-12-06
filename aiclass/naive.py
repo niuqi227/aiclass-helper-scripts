@@ -1,3 +1,4 @@
+from aiclass.command import BaseCommand
 from aiclass.parser import SimpleParser, parse_graph
 import itertools, fractions, collections, functools
 
@@ -126,6 +127,35 @@ class Material(object):
 
 
 
+class NaiveCommand(BaseCommand):
+    name = 'naive'
+    description = 'naive bayes'
+    help = 'naive bayes'
 
+
+    @classmethod
+    def configure_parser(cls, parser):
+        parser.add_argument('-l', '--laplace', default=0, type=int)
+        parser.add_argument('material')
+
+
+    @classmethod
+    def create_from_args(cls, args):
+        return cls(cls.get_data(args.material), args.laplace)
+
+
+    def __init__(self, material, laplace):
+        from aiclass import naive
+        self.material = MaterialParser().parse(material)
+        self.laplace = laplace
+
+
+    def call(self, string):
+        if string == r'\q': 
+            return True
+        elif string == r'\size':
+            print(self.material.size_of_vocabulary())
+        else:
+            print('P(%s) = %s'%(string, self.material.query(string, self.laplace)))
 
 

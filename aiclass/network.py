@@ -1,3 +1,4 @@
+from aiclass.command import BaseCommand
 from aiclass.parser import SimpleParser, parse_graph
 from aiclass.search import Problem, BfsSearcher
 
@@ -90,5 +91,33 @@ class BayesNetwork(object):
 
 
 
+
+class NetworkCommand(BaseCommand):
+    name = 'network'
+    description ='bayes network'
+    help ='bayes network'
+
+
+    @classmethod
+    def configure_parser(cls, parser):
+        parser.add_argument('data', help='data of network')
+
+
+    @classmethod
+    def create_from_args(cls, args):
+        return cls(cls.get_data(args.data))
+
+
+    def __init__(self, data):
+        self.bayes_network = BayesNetwork(data)
+
+
+    def call(self, string):
+        if string == r'\q':
+            return True
+        elif string == 'params':
+            print(self.bayes_network.parameters())
+        else:
+            print(self.bayes_network.validate(string))
 
 

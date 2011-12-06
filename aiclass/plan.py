@@ -1,3 +1,4 @@
+from aiclass.command import BaseCommand
 from aiclass.parser import SimpleParser
 
 import itertools
@@ -240,5 +241,35 @@ class ClassicPlanDatabase(object):
             self._eval(s)    
 
 
+
+class PlanCommand(BaseCommand):
+    name = 'plan'
+    description = 'classic plan'
+    help = 'classic plan'
+
+    @classmethod
+    def configure_parser(cls, parser):
+        parser.add_argument('-i', '--initial', help='initialize data')
+
+
+    @classmethod
+    def create_from_args(cls, args):
+        if args.initial:
+            return cls(cls.get_data(args.initial))
+        else:
+            return cls()
+
+
+    def __init__(self, initial=None):
+        self.db = ClassicPlanDatabase()
+        if initial:
+            self.db.evaluate(initial)
+
+
+    def call(self, string):
+        if string == r'\q':
+            return True
+
+        print(self.db.eval(string))
 
 

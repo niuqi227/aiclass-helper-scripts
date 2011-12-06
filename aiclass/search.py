@@ -1,3 +1,4 @@
+from aiclass.command import BaseCommand
 from aiclass.parser import parse_graph
 
 
@@ -246,5 +247,68 @@ class NodeCountProblem(Problem):
         return state == self.goal
 
 
+
+
+class SearchCommand(BaseCommand):
+    name = 'search'
+    description = 'search'
+    help = 'search'
+
+
+    @classmethod
+    def configure_parser(cls, parser):
+        parser.add_argument(
+            'type',
+            choices=['astar', 'bfs', 'cfs', 'dfs'],
+            help='type of searcher')
+        parser.add_argument('problem', help='problem to search')
+
+
+    @classmethod
+    def create_from_args(cls, args):
+        from aiclass import search
+        SearcherClass = globals().get(args.type.capitalize() + 'Searcher')
+
+        if args.problem.startswith('data:'):
+            from aiclass import data
+            ProblemClass = getattr(data, args.problem[5:].upper().replace('-', '_')+'_PROBLEM')
+        else:
+            problem_name = args.problem.split('.')
+            mod_name, class_name = '.'.join(problem_name[:-1]), problem_name[-1]
+            ProblemClass = getattr(__import__(mod_name, fromlist=[class_name]), class_name)
+
+        problem = ProblemClass()
+        return cls(problem, SearcherClass)
+
+
+    def __init__(self, problem, searcher_class):
+        self.searcher = searcher_class(problem)
+
+
+    def call(self, string):
+        if string == 'quit':
+            return True
+        elif string == 'count':
+            print(self.searcher.expand_count)
+        elif string == 'expand':
+            print(self.searcher.expand())
+        elif string == 'explored':
+            for e in self.searcher.get_explored():
+                print(e)
+        elif string == 'frontier':
+            for f in self.searcher._frontier:
+                print(f[0])
+        elif string == 'go':
+            if self.searcher.search():
+                for s in self.searcher.trace_states():
+                    print(s)
+            else:
+                print('search failed')
+        elif string.startswith('trace '):
+            state = string[6:].strip()
+            for s in self.searcher.trace_states(state):
+                print(s)
+        else:
+            print('count\texpand\texplored\tfrontier\tgo\tquit\ttrace')
         
 
