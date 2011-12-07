@@ -116,6 +116,33 @@ class Parser(SimpleParser):
 
 
 class ProposCommand(BaseCommand):
+    """
+    $ aiclass props
+    >>> p|~p
+    V
+    >>> p&~p
+    U
+    >>> p|q|(p<=>q)
+    V
+    >>> (p=>q)|(q=>p)
+    V
+    >>> ((food=>party)|(drinks=>party))=>((food&drinks)=>party)
+    V
+
+    $ aiclass props
+    >>> (smoke=>fire)<=>(smoke|~fire)
+    S
+    >>> (smoke=>fire)<=>(~smoke=>~fire)
+    S
+    >>> (smoke=>fire)<=>(~fire=>~smoke)
+    V
+    >>> big|dumb|(big=>dumb)
+    V
+    >>> big&dumb<=>~(~big|~dumb)
+    V
+    """
+
+    
     name = 'props'
     description = 'propositional logic'
     help = 'propositional logic'
@@ -125,7 +152,7 @@ class ProposCommand(BaseCommand):
 
     def call(self, string):
         if string == r'\q':
-            return True
+            raise SystemExit
 
-        print(self.parser.parse(string).validate())
+        return self.parser.parse(string).validate()
 

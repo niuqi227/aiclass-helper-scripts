@@ -250,6 +250,148 @@ class NodeCountProblem(Problem):
 
 
 class SearchCommand(BaseCommand):
+    """
+    $ aiclass search cfs data:ROMANIA
+    >>> expand
+    Arad
+    >>> expand
+    Zerind
+    >>> expand
+    Timisoara
+    >>> expand
+    Sibiu
+    >>> expand
+    Oradea
+    >>> expand
+    Rimnicu Vilcea
+    >>> expand
+    Lugoj
+    >>> expand
+    Fagaras
+    >>> expand
+    Mehadia
+    >>> expand
+    Pitesti
+    >>> expand
+    Craiova
+    >>> expand
+    Drobeta
+    >>> expand
+    Bucharest
+    >>> search
+    ok
+    >>> go
+    Arad
+    Sibiu
+    Rimnicu Vilcea
+    Pitesti
+    Bucharest
+
+    $ aiclass search astar data:ROMANIA
+    >>> expand
+    Arad
+    >>> expand
+    Sibiu
+    >>> expand
+    Rimnicu Vilcea
+    >>> expand
+    Fagaras
+    >>> expand
+    Pitesti
+    >>> expand
+    Bucharest
+    >>> search
+    ok
+    >>> go
+    Arad
+    Sibiu
+    Rimnicu Vilcea
+    Pitesti
+    Bucharest
+
+    $ aiclass search bfs data:search-tree-ltr
+    >>> search
+    ok
+    >>> count
+    6
+
+    $ aiclass search dfs data:search-tree-ltr
+    >>> search
+    ok
+    >>> count
+    4
+
+    $ aiclass search bfs data:search-tree-rtl
+    >>> search
+    ok
+    >>> count
+    9
+
+    $ aiclass search dfs data:search-tree-rtl
+    >>> search
+    ok
+    >>> count
+    9
+
+    $ aiclass search bfs data:search-tree-2-ltr
+    >>> search
+    ok
+    >>> count
+    13
+
+    $ aiclass search dfs data:search-tree-2-ltr
+    >>> search
+    ok
+    >>> count
+    10
+
+    $ aiclass search bfs data:search-tree-2-rtl
+    >>> search
+    ok
+    >>> count
+    11
+
+    $ aiclass search dfs data:search-tree-2-rtl
+    >>> search
+    ok
+    >>> count
+    7
+
+    $ aiclass search bfs data:search-network-ltr
+    >>> search
+    ok
+    >>> count
+    10
+
+    $ aiclass search dfs data:search-network-ltr
+    >>> search
+    ok
+    >>> count
+    16
+
+    $ aiclass search bfs data:search-network-rtl
+    >>> search
+    ok
+    >>> count
+    7
+
+    $ aiclass search dfs data:search-network-rtl
+    >>> search
+    ok
+    >>> count
+    4
+
+    $ aiclass search astar data:astar-search
+    >>> expand
+    a1
+    >>> expand
+    b1
+    >>> expand
+    c1
+    >>> expand
+    d1
+    """
+
     name = 'search'
     description = 'search'
     help = 'search'
@@ -287,28 +429,29 @@ class SearchCommand(BaseCommand):
 
     def call(self, string):
         if string == 'quit':
-            return True
+            raise SystemExit
         elif string == 'count':
-            print(self.searcher.expand_count)
+            return self.searcher.expand_count
         elif string == 'expand':
-            print(self.searcher.expand())
+            return self.searcher.expand()
         elif string == 'explored':
-            for e in self.searcher.get_explored():
-                print(e)
+            return '\n'.join(e for e in self.searcher.get_explored())
         elif string == 'frontier':
-            for f in self.searcher._frontier:
-                print(f[0])
+            return '\n'.join(f[0] for f in self.searcher._frontier)
         elif string == 'go':
             if self.searcher.search():
-                for s in self.searcher.trace_states():
-                    print(s)
+                return '\n'.join(s for s in self.searcher.trace_states())
+        elif string == 'search':
+            if self.searcher.search():
+                return 'ok'
             else:
-                print('search failed')
+                return 'FAILED'
         elif string.startswith('trace '):
             state = string[6:].strip()
-            for s in self.searcher.trace_states(state):
-                print(s)
+            return '\n'.join(s for s in self.searcher.trace_states(state))
         else:
-            print('count\texpand\texplored\tfrontier\tgo\tquit\ttrace')
-        
+            return 'count\texpand\texplored\tfrontier\tgo\tquit\ttrace'
+
+
+
 

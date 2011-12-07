@@ -243,6 +243,22 @@ class ClassicPlanDatabase(object):
 
 
 class PlanCommand(BaseCommand):
+    """
+    $ aiclass plan -i data:monkey-and-bananas
+    >>> Have(monkey,bananas).
+    True
+    >>> At(box,c).
+    False
+    >>> At(monkey,b).
+    True
+    >>> At(bananas,b).
+    True
+    >>> Height(monkey,high).
+    False
+    >>> Height(bananas,high).
+    True
+    """
+
     name = 'plan'
     description = 'classic plan'
     help = 'classic plan'
@@ -268,8 +284,8 @@ class PlanCommand(BaseCommand):
 
     def call(self, string):
         if string == r'\q':
-            return True
+            raise SystemExit
 
-        print(self.db.eval(string))
+        return self.db.eval(string)
 
 

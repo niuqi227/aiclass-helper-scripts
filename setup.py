@@ -24,7 +24,7 @@ setup(
     requires=['ply'],
     
     packages=['aiclass'],
-    test_suite = 'aiclass.tests',
+    test_suite = 'aiclass.tests.suite',
 
     entry_points = {
         'console_scripts': [

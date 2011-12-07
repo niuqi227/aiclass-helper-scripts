@@ -128,6 +128,57 @@ class Material(object):
 
 
 class NaiveCommand(BaseCommand):
+    """
+    $ aiclass naive data:spam-ham
+    >>> \size
+    12
+    >>> SPAM
+    3/8
+    >>> "SECRET"|SPAM
+    1/3
+    >>> "SECRET"|HAM
+    1/15
+    >>> SPAM|"SPORTS"
+    1/6
+    >>> SPAM|"SECRET IS SECRET"
+    25/26
+    >>> SPAM|"TODAY IS SECRET"
+    0
+
+    $ aiclass naive -l 1 data:spam-ham
+    >>> SPAM
+    2/5
+    >>> HAM
+    3/5
+    >>> "TODAY"|SPAM
+    1/21
+    >>> "TODAY"|HAM
+    1/9
+    >>> SPAM|"TODAY IS SECRET"
+    324/667
+
+    $ aiclass naive -l 1 data:movie-song
+    >>> MOVIE
+    1/2
+    >>> SONG
+    1/2
+    >>> "PERFECT"|MOVIE
+    3/19
+    >>> "PERFECT"|SONG
+    2/19
+    >>> "STORM"|MOVIE
+    1/19
+    >>> "STORM"|SONG
+    2/19
+    >>> MOVIE|"PERFECT STORM"
+    3/7
+
+    $ aiclass naive data:movie-song
+    >>> MOVIE|"PERFECT STORM"
+    0
+    """
+
+
     name = 'naive'
     description = 'naive bayes'
     help = 'naive bayes'
@@ -152,10 +203,10 @@ class NaiveCommand(BaseCommand):
 
     def call(self, string):
         if string == r'\q': 
-            return True
+            raise SystemExit
         elif string == r'\size':
-            print(self.material.size_of_vocabulary())
+            return self.material.size_of_vocabulary()
         else:
-            print('P(%s) = %s'%(string, self.material.query(string, self.laplace)))
+            return self.material.query(string, self.laplace)
 
 

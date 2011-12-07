@@ -93,6 +93,83 @@ class BayesNetwork(object):
 
 
 class NetworkCommand(BaseCommand):
+    """
+    $ aiclass network data:bayes-network
+    >>> params
+    3
+
+    $ aiclass network data:general-bayes-net
+    >>> params
+    13
+
+    $ aiclass network data:general-bayes-net-2
+    >>> params
+    19
+
+    $ aiclass network data:general-bayes-net-3
+    >>> params
+    47
+
+    $ aiclass network data:parameter-count
+    >>> params
+    16
+
+    $ aiclass network data:d-separation
+    >>> C_|_A
+    False
+    >>> C_|_A|B
+    True
+    >>> C_|_D
+    False
+    >>> C_|_D|A
+    True
+    >>> E_|_C|D
+    True
+
+    $ aiclass network data:d-separation-2
+    >>> A_|_E
+    False
+    >>> A_|_E|B
+    False
+    >>> A_|_E|C
+    True
+    >>> A_|_B
+    True
+    >>> A_|_B|C
+    False
+
+    $ aiclass network data:d-separation-3
+    >>> F_|_A
+    True
+    >>> F_|_A|D
+    False
+    >>> F_|_A|G
+    False
+    >>> F_|_A|H
+    True
+
+    $ aiclass network data:conditional-independence
+    >>> B_|_C
+    False
+    >>> B_|_C|D
+    False
+    >>> B_|_C|A
+    True
+    >>> B_|_C|A,D
+    False
+
+    $ aiclass network data:conditional-independence-2
+    >>> C_|_E|A
+    False
+    >>> B_|_D|C,E
+    False
+    >>> A_|_C|E
+    False
+    >>> A_|_C|B
+    True
+    """
+
+    
     name = 'network'
     description ='bayes network'
     help ='bayes network'
@@ -114,10 +191,13 @@ class NetworkCommand(BaseCommand):
 
     def call(self, string):
         if string == r'\q':
-            return True
+            raise SystemExit
         elif string == 'params':
-            print(self.bayes_network.parameters())
+            return self.bayes_network.parameters()
         else:
-            print(self.bayes_network.validate(string))
+            return self.bayes_network.validate(string)
+
+
+
 
 
