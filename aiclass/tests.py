@@ -20,7 +20,7 @@ class TestFailure(AssertionError):
 
     def __str__(self):
         return "File '{filename}' line {lineno}\n{error}".format(
-            filename = self.filename.encode('string_escape'),
+            filename = self.filename.encode('unicode_escape'),
             lineno = self.lineno,
             error = self.error)
 
@@ -119,8 +119,7 @@ class TestCase(unittest.TestCase):
 
 
     def shortDescription(self):
-        return 'aiclass ' + self.arguments
-
+        pass
 
 
 def find_command_tests(command):
